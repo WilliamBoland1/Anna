@@ -192,24 +192,44 @@ const fadeObserver = new IntersectionObserver(
   { threshold: [0, 0.08], rootMargin: "-18% 0px -18% 0px" }
 );
 
-const chapterObserver = new IntersectionObserver(
-  entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.remove('exit-up');
-        entry.target.classList.add('visible');
-      } else {
-        entry.target.classList.remove('visible');
-        if (scrollDir >= 0) {
-          entry.target.classList.add('exit-up');
-        } else {
-          entry.target.classList.remove('exit-up');
-        }
-      }
-    });
-  },
-  { threshold: [0, 0.08], rootMargin: "-18% 0px -40% 0px" }
-);
-
 document.querySelectorAll('.fade-in:not(.fade-chapter)').forEach(el => fadeObserver.observe(el));
-document.querySelectorAll('.fade-chapter').forEach(el => chapterObserver.observe(el));
+
+/* ── scroll-driven chapter fade ── */
+const chapterEls = Array.from(document.querySelectorAll('.fade-chapter'));
+
+function updateChapters() {
+  const vh = window.innerHeight;
+  chapterEls.forEach(el => {
+    const divider = el.closest('.chapter-divider');
+    if (!divider) return;
+    const rect      = divider.getBoundingClientRect();
+    const scrollable = rect.height - vh;
+    if (scrollable <= 0) return;
+
+    // 0 = divider top just hit viewport top; 1 = divider bottom just hit viewport top
+    const progress = Math.min(1, Math.max(0, -rect.top / scrollable));
+
+    const FADE_IN_END   = 0.22;
+    const FADE_OUT_START = 0.78;
+
+    let opacity, ty;
+    if (progress < FADE_IN_END) {
+      const t = progress / FADE_IN_END;
+      opacity = t;
+      ty      = 30 * (1 - t);
+    } else if (progress > FADE_OUT_START) {
+      const t = (progress - FADE_OUT_START) / (1 - FADE_OUT_START);
+      opacity = 1 - t;
+      ty      = -20 * t;
+    } else {
+      opacity = 1;
+      ty      = 0;
+    }
+
+    el.style.opacity   = opacity;
+    el.style.transform = `translateY(${ty}px)`;
+  });
+}
+
+window.addEventListener('scroll', updateChapters, { passive: true });
+updateChapters();
