@@ -1,0 +1,10 @@
+Line opp scrollen mer riktig så den går nedover
+
+Legg til egen tekst
+
+Legg til knapp for å få koselige ord på bunnen av siden, dette kan lenke til ny side
+
+Legg til en teller på hvor lenge vi har vært sammen helt i starten
+
+Trengs det at siden laster inn så alt kommer inn på en gang??
+
