@@ -637,6 +637,22 @@
     .fade-in.delay-2      { transition-delay: 0.26s; }
     .fade-in.delay-scroll { transition-delay: 0.9s; }
 
+    .fade-chapter {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 3.5s ease-in-out, transform 3.5s ease-in-out;
+    }
+
+    .fade-chapter.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 3s ease-in-out, transform 3s ease-in-out;
+    }
+
+    .fade-chapter.exit-up { opacity: 0; transform: translateY(-20px); }
+
+    .fade-chapter.delay-chapter { transition-delay: 0.2s; }
+
     /* ══════════════════════════════════════════
        CLOSING
     ══════════════════════════════════════════ */
@@ -743,7 +759,7 @@
   ══════════════════════════════════════════════════════ -->
   <div class="chapter-divider" style="min-height: 200vh; background: linear-gradient(to bottom, #1A3328 0%, #1A3328 80%, #2C4A3E 88%, #F5F2EB 100%);">
     <div class="pin-wrap">
-      <div class="div-content fade-in">
+      <div class="div-content fade-chapter delay-chapter">
         <p class="chapter-number">Chapter I</p>
         <h2 class="chapter-title">Our<br>Travels</h2>
         <p class="chapter-desc">
@@ -842,7 +858,7 @@
   ══════════════════════════════════════════════════════ -->
   <div class="chapter-divider">
     <div class="pin-wrap">
-      <div class="div-content fade-in">
+      <div class="div-content fade-chapter delay-chapter">
         <p class="chapter-number">Chapter II</p>
         <h2 class="chapter-title">How We<br>Met</h2>
         <p class="chapter-desc">
@@ -939,7 +955,7 @@
   ══════════════════════════════════════════════════════ -->
   <div class="chapter-divider">
     <div class="pin-wrap">
-      <div class="div-content fade-in">
+      <div class="div-content fade-chapter delay-chapter">
         <p class="chapter-number">Chapter III</p>
         <h2 class="chapter-title">Things I<br>Love<br>About You</h2>
         <p class="chapter-desc">
@@ -1255,13 +1271,10 @@
       entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            /* entering viewport — breathe in */
             entry.target.classList.remove('exit-up');
             entry.target.classList.add('visible');
           } else {
-            /* leaving viewport — breathe out */
             entry.target.classList.remove('visible');
-            /* drift upward only when scrolling down (element left from top) */
             if (scrollDir >= 0) {
               entry.target.classList.add('exit-up');
             } else {
@@ -1270,10 +1283,30 @@
           }
         });
       },
-      { threshold: [0, 0.08], rootMargin: "-0% 0px -40% 0px" }
+      { threshold: [0, 0.08], rootMargin: "-18% 0px -18% 0px" }
     );
 
-    document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+    const chapterObserver = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove('exit-up');
+            entry.target.classList.add('visible');
+          } else {
+            entry.target.classList.remove('visible');
+            if (scrollDir >= 0) {
+              entry.target.classList.add('exit-up');
+            } else {
+              entry.target.classList.remove('exit-up');
+            }
+          }
+        });
+      },
+      { threshold: [0, 0.08], rootMargin: "-18% 0px -40% 0px" }
+    );
+
+    document.querySelectorAll('.fade-in:not(.fade-chapter)').forEach(el => fadeObserver.observe(el));
+    document.querySelectorAll('.fade-chapter').forEach(el => chapterObserver.observe(el));
   </script>
 </body>
 </html>
