@@ -209,8 +209,9 @@ function updateChapters() {
     // 0 = divider top just hit viewport top; 1 = divider bottom just hit viewport top
     const progress = Math.min(1, Math.max(0, -rect.top / scrollable));
 
-    const FADE_IN_END   = 0.22;
-    const FADE_OUT_START = 0.78;
+    // Endre tid for å få en lengre "full opacity" periode og mykere inn/ut
+    const FADE_IN_END   = 0.60;
+    const FADE_OUT_START = 0.70;
 
     let opacity, ty;
     if (progress < FADE_IN_END) {
