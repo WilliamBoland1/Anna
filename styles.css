@@ -74,7 +74,7 @@ body {
 .hero-scroll-hint {
   animation: hintAppear 1.2s ease-out 2s both;
   position: absolute;
-  bottom: 0rem;
+  bottom: 3rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
