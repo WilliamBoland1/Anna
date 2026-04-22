@@ -210,7 +210,7 @@ function updateChapters() {
     const progress = Math.min(1, Math.max(0, -rect.top / scrollable));
 
     // Endre tid for å få en lengre "full opacity" periode og mykere inn/ut
-    const FADE_IN_END   = 0.60;
+    const FADE_IN_END    = 0.25;
     const FADE_OUT_START = 0.70;
 
     let opacity, ty;
