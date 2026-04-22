@@ -176,7 +176,7 @@ body {
 ══════════════════════════════════════════ */
 .content-section {
   background: var(--cream);
-  padding: 5rem 5vw 7rem;
+  padding: 0rem 5vw 0rem;
   margin-top: -2px;
   position: relative;
 }
