@@ -206,12 +206,13 @@ function updateChapters() {
     const scrollable = rect.height - vh;
     if (scrollable <= 0) return;
 
-    // 0 = divider top just hit viewport top; 1 = divider bottom just hit viewport top
-    const progress = Math.min(1, Math.max(0, -rect.top / scrollable));
-
-    // Endre tid for å få en lengre "full opacity" periode og mykere inn/ut
-    const FADE_IN_END    = 0.25;
+    const isFirst = divider.hasAttribute('data-chapter-first');
+    const earlyOffset  = isFirst ? vh * 0.28 : 0;
+    const FADE_IN_END    = isFirst ? 0.38 : 0.25;
     const FADE_OUT_START = 0.70;
+
+    // 0 = divider top just hit viewport top; 1 = divider bottom just hit viewport top
+    const progress = Math.min(1, Math.max(0, (-rect.top + earlyOffset) / scrollable));
 
     let opacity, ty;
     if (progress < FADE_IN_END) {
