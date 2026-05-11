@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>godeord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Caveat:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ---------- base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+
+  :root {
+    --base:         #0a1929;   /* deep sea night */
+    --abyss:        #061320;   /* deepest water */
+    --deep:         #14304a;   /* mid sea */
+    --tide:         #1f4865;   /* tide blue */
+    --current:      #2d6788;   /* lighter current */
+    --foam:         #6fa8c4;   /* pale foam highlight */
+    --moonlight:    #a8c8dc;   /* moonlight on water */
+    --ink:          #d8e4ed;   /* pale ink (text on dark) */
+    --ink-soft:     #8aa5b8;   /* faded sea-mist text */
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--base);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
+    overflow: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- watercolour background ----------
+     Layered radial gradients create soft pigment blooms.
+     SVG turbulence overlay adds paper-bleed grain. */
+  .wash {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 55% at 20% 20%, rgba(45, 103, 136, 0.55), transparent 65%),
+      radial-gradient(ellipse 60% 50% at 80% 25%, rgba(31, 72, 101, 0.65), transparent 65%),
+      radial-gradient(ellipse 75% 60% at 75% 80%, rgba(20, 48, 74, 0.70), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 15% 85%, rgba(45, 103, 136, 0.40), transparent 65%),
+      radial-gradient(ellipse 45% 40% at 50% 50%, rgba(111, 168, 196, 0.18), transparent 70%),
+      radial-gradient(ellipse 80% 70% at 50% 100%, rgba(6, 19, 32, 0.85), transparent 60%),
+      var(--base);
+    filter: blur(0.5px);
+  }
+
+  /* paper grain via SVG noise */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.07;
+  }
+
+  /* drifting petal particles */
+  .petals {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .petal {
+    position: absolute;
+    bottom: -8vh;
+    width: 14px;
+    height: 14px;
+    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+    opacity: 0;
+    animation: drift linear infinite;
+    will-change: transform, opacity;
+    filter: blur(0.5px);
+  }
+  .petal:nth-child(1)  { left:  8%; background: rgba(168, 200, 220, 0.45); animation-duration: 28s; animation-delay:  0s; }
+  .petal:nth-child(2)  { left: 22%; background: rgba(111, 168, 196, 0.40); animation-duration: 36s; animation-delay: -6s; transform: scale(0.7); }
+  .petal:nth-child(3)  { left: 35%; background: rgba(168, 200, 220, 0.35); animation-duration: 42s; animation-delay: -14s; transform: scale(1.1); }
+  .petal:nth-child(4)  { left: 48%; background: rgba(111, 168, 196, 0.40); animation-duration: 32s; animation-delay: -3s; transform: scale(0.85); }
+  .petal:nth-child(5)  { left: 60%; background: rgba(168, 200, 220, 0.50); animation-duration: 38s; animation-delay: -20s; transform: scale(0.6); }
+  .petal:nth-child(6)  { left: 72%; background: rgba(111, 168, 196, 0.35); animation-duration: 30s; animation-delay: -9s; }
+  .petal:nth-child(7)  { left: 85%; background: rgba(168, 200, 220, 0.40); animation-duration: 44s; animation-delay: -18s; transform: scale(1.2); }
+  .petal:nth-child(8)  { left: 92%; background: rgba(111, 168, 196, 0.30); animation-duration: 34s; animation-delay: -25s; transform: scale(0.75); }
+  .petal:nth-child(9)  { left: 15%; background: rgba(168, 200, 220, 0.40); animation-duration: 40s; animation-delay: -11s; transform: scale(0.9); }
+  .petal:nth-child(10) { left: 65%; background: rgba(111, 168, 196, 0.45); animation-duration: 26s; animation-delay: -16s; transform: scale(0.7); }
+
+  @keyframes drift {
+    0%   { transform: translateY(0)        translateX(0)     rotate(0deg)   scale(var(--s, 1)); opacity: 0; }
+    10%  { opacity: 0.7; }
+    50%  { transform: translateY(-50vh)    translateX(20px)  rotate(180deg) scale(var(--s, 1)); }
+    90%  { opacity: 0.4; }
+    100% { transform: translateY(-110vh)   translateX(-15px) rotate(360deg) scale(var(--s, 1)); opacity: 0; }
+  }
+
+  /* ---------- layout ---------- */
+  .stage {
+    position: relative;
+    z-index: 3;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6vh 8vw;
+  }
+
+  .message-wrap {
+    max-width: 720px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: rise 1.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.2s forwards;
+  }
+
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* decorative ornament above message */
+  .ornament {
+    display: block;
+    margin: 0 auto 2.2rem;
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--foam), transparent);
+    opacity: 0;
+    animation: fadein 2s ease 0.4s forwards;
+  }
+  .ornament::before {
+    content: "✦";
+    position: relative;
+    top: -10px;
+    background: transparent;
+    color: var(--foam);
+    font-size: 14px;
+    opacity: 0.65;
+  }
+
+  @keyframes fadein { to { opacity: 1; } }
+
+  #message {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(1.6rem, 4.2vw, 2.6rem);
+    line-height: 1.45;
+    color: var(--ink);
+    letter-spacing: 0.005em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .signature {
+    margin-top: 2.5rem;
+    font-family: 'Caveat', cursive;
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadein 2s ease 1.1s forwards;
+    letter-spacing: 0.02em;
+  }
+
+  .date-stamp {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    z-index: 4;
+    font-family: 'Caveat', cursive;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadein 2.5s ease 1.5s forwards;
+    letter-spacing: 0.03em;
+  }
+
+  .day-marker {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 4;
+    font-family: 'Caveat', cursive;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadein 2.5s ease 1.5s forwards;
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 600px) {
+    .date-stamp { top: 1.2rem; left: 1.2rem; font-size: 0.95rem; }
+    .day-marker { bottom: 1.2rem; right: 1.2rem; font-size: 0.9rem; }
+    .stage { padding: 4vh 6vw; }
+    #message { font-style: italic; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .petals { display: none; }
+    .message-wrap, .ornament, .signature, .date-stamp, .day-marker {
+      animation: fadein 0.6s ease forwards;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- watercolour wash layer -->
+<div class="wash"></div>
+
+<!-- SVG paper-grain overlay -->
+<svg class="grain" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+  <defs>
+    <filter id="paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="7"/>
+      <feColorMatrix values="0 0 0 0 0.55
+                             0 0 0 0 0.68
+                             0 0 0 0 0.80
+                             0 0 0 0.22 0"/>
+    </filter>
+    <filter id="bloom">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="20"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" filter="url(#paper)"/>
+</svg>
+
+<!-- drifting petals -->
+<div class="petals" aria-hidden="true">
+  <span class="petal"></span><span class="petal"></span><span class="petal"></span>
+  <span class="petal"></span><span class="petal"></span><span class="petal"></span>
+  <span class="petal"></span><span class="petal"></span><span class="petal"></span>
+  <span class="petal"></span>
+</div>
+
+<!-- date corner -->
+<div class="date-stamp" id="dateStamp"></div>
+<div class="day-marker" id="dayMarker"></div>
+
+<!-- the message -->
+<main class="stage">
+  <div class="message-wrap">
+    <span class="ornament" aria-hidden="true"></span>
+    <p id="message">…</p>
+    <div class="signature">— for deg, alltid</div>
+  </div>
+</main>
+
+<script>
+/* =====================================================================
+   MESSAGES ARRAY
+   ---------------------------------------------------------------------
+   365 short notes, mixing three tones in a shuffled order so consecutive
+   days feel varied. Edit any entry freely — keep them to ~1–2 sentences,
+   max ~140 characters. The page selects one per day using
+   dayOfYear % messages.length, so adding or removing entries is fine.
+
+   Tone tags in comments are for your reference only — they have no
+   functional effect.
+   ===================================================================== */
+const messages = [/*  1 */ "Jeg elsker måten du får meg til å le.",  // romantisk
+  /*  2 */ "Du er flink. Skikkelig flink. Stå på!",  // bekreftelse
+  /*  3 */ "Dagens værvarsel: 100 prosent sjanse for at du blir elsket, med spredte kyss mot kvelden.",  // lekent
+  /*  4 */ "Er så gheldig som har muligheten til å se deg, hver dag. Det er litt urettferdig alle andre egentlig.",  // romantisk
+  /*  5 */ "Du er en av de få folkene jeg kjenner som faktisk har kontroll.",  // bekreftelse
+  /*  6 */ "Påminnelse: du er noens favorittperson i dag. (Min. Det er meg.)",  // lekent
+  /*  7 */ "Du har de fineste øynene. Det er ikke noe jeg sier. Det er et faktum.",  // romantisk
+  /*  8 */ "Du er morsom. Den ekte typen morsom, som overrasker folk midt i en setning.",  // bekreftelse
+  /*  9 */ "Utrolig tekknemlig for at du valgte en tulling som meg.",  // lekent
+  /* 10 */ "Du er den peneste personen jeg kjenner. Jeg vet hva jeg snakker om.",  // romantisk
+  /* 11 */ "Du får til utrolig mye. Jeg sier det ikke ofte nok, men jeg legger merke til det.",  // bekreftelse
+  /* 12 */ "Siste nytt: forskere bekrefter at du fortsatt er ekstremt pen.",  // lekent
+  /* 13 */ "Jeg tenker på deg mer enn jeg tenker på noe annet.",  // romantisk
+  /* 14 */ "Håper du har en utrolig fin dag i dag, jenta mi.",  // bekreftelse
+  /* 15 */ "På en skala fra en til ti blåser du langt fordbi 10.",  // lekent
+  /* 16 */ "Jeg er bedre i rommet med deg. Jeg er roligere, morsommere, mer meg selv.",  // romantisk
+  /* 17 */ "Du har god smak. På mat, på folk, på det meste. Ikke minst i valg av kjæreste.",  // bekreftelse
+  /* 18 */ "Forslag: gjør smilet ditt til en lovbeskyttet naturressurs.",  // lekent
+  /* 19 */ "Du kommer til å bli en utrolig god mor, gleder meg sånn til å oppdra en sammen.",  // romantisk
+  /* 20 */ "Du sier hva du mener. Selv om jeg kanskje er vanskelig til tider, setter jeg utrolig pris på det.",  // bekreftelse
+  /* 21 */ "Hvis du var en matpakke ville du vært den gode typen. Den med ekstra frukt og grønt.",  // lekent
+  /* 22 */ "Jeg vil være personen som lager kaffe din resten av morgenene i livet ditt.",  // romantisk
+  /* 23 */ "Du jobber hardt. Du fortjener alle pausene du tar, og flere enn det.",  // bekreftelse
+  /* 24 */ "Daglig advarsel: jeg elsker deg skyhøyt i dag og.",  // lekent
+  /* 25 */ "Jeg liker deg mer for hver dag som går.",  // romantisk
+  /* 26 */ "Du legger merke til ting andre ikke ser. Det er en av tingene som gjør deg god til alt du gjør.",  // bekreftelse
+  /* 27 */ "Dagens oppdrag, bare kos deg.",  // lekent
+  /* 28 */ "Jeg elsker hendene dine.",  // romantisk
+  /* 29 */ "Du har ikke noe å bevise. Verken for meg eller for noen andre.",  // bekreftelse
+  /* 30 */ "Hovedrollen i dagen min er, overraskende nok, du. Igjen.",  // lekent
+  /* 31 */ "Utrolig å se deg på deg og kjenne at det blir helt stille i hodet.",  // romantisk
+  /* 32 */ "Du holder ut hele løpet. Bokstavelig talt og ellers. Det er ikke alle som gjør det.",  // bekreftelse
+  /* 33 */ "Hvis du noensinne føler deg liten, husk: du er nesten like høy som meg.",  // lekent
+  /* 34 */ "Jeg elsker når du leser og ansiktet ditt som tenker nøye over handlingen.",  // romantisk
+  /* 35 */ "Du er flink til å stille spørsmål. Folk åpner seg for deg fordi du faktisk lytter.",  // bekreftelse
+  /* 36 */ "Advarsel: langvarig eksponering for deg kan føre til upassende smiling på offentlig sted.",  // lekent
+  /* 37 */ "Jeg liker måten du ser ut når du nettopp har vært ute og løpt. Det er en favoritt.",  // romantisk
+  /* 38 */ "Latteren din er den beste.",  // bekreftelse
+  /* 39 */ "Det er godt jenta mi, håper du har en fin dag.",  // lekent
+  /* 40 */ "Jeg elsker deg gjerne med små bokstaver, en tirsdag, uten anledning.",  // romantisk
+  /* 41 */ "Du takler mye samtidig uten å vise det. Det er utrolig imponerende.",  // bekreftelse
+  /* 42 */ "Gleder meg til alt vi skal oppleve sammen hver dag.",  // lekent
+  /* 43 */ "Det finnes ikke et rom jeg heller ville gått inn i enn det du tilfeldigvis er i.",  // romantisk
+  /* 44 */ "Du er omtenksom. Du husker ting om folk de hadde glemt selv. Ofte med meg.",  // bekreftelse
+  /* 45 */ "Bolleonsdag. I dag har du juridisk rett til en ekstra bolle. Ingen motargumenter.",  // lekent
+  /* 46 */ "Tror ikke jeg noen gang kommer til å komme over hvor vakker stemme du har.",  // romantisk
+  /* 47 */ "Rolige kvelder med deg>>>>",  // bekreftelse
+  /* 48 */ "Mistanke bekreftet: du er fortsatt den peneste personen i verden.",  // lekent
+  /* 49 */ "Det er ikke tilfeldig at jeg er sammen med deg. Du er valget jeg ville tatt om og om igjen.",  // romantisk
+  /* 50 */ "Du er sta på de riktige tingene. Det kommer til å ta deg langt, og jeg vil være med.",  // bekreftelse
+  /* 51 */ "Timeplan for i dag: vær søt, drikk vann, gjenta etter behov.",  // lekent
+  /* 52 */ "Jeg elsker den lille rynken du får når ejg sier noe dumt.",  // romantisk
+  /* 53 */ "Du er ærlig. Ekte ærlig, ikke bare når det passer. Det er sjelden vare.",  // bekreftelse
+  /* 54 */ "I dag er middagen på min kappe.",  // lekent
+  /* 55 */ "Jeg elsker deg.",  // romantisk
+  /* 56 */ "Du har lov til å være stolt av deg selv. Det er ikke skryt, det er ærlig tilbakemeldning.",  // bekreftelse
+  /* 57 */ "Advarsel: kan forvente plutselig, alvorlig hengivenhet. I form av kyss.",  // lekent
+  /* 58 */ "Noen dager vil jeg bare sitte nær deg og se på at du eksisterer. Det er hele planen.",  // romantisk
+  /* 59 */ "Du er sjenerøs på den måten som teller — med tid, oppmerksomhet, plass i samtalen.",  // bekreftelse
+  /* 60 */ "Oppdatering: fortsatt besatt av deg. Rapporterer tilbake i morgen med lignende funn.",  // lekent
+  /* 61 */ "Anna Lillemoen Boland Treffen, eller Treffen Boland, Hmmm.",  // romantisk
+  /* 62 */ "Du er god mot folk uten å lage et nummer av det. Det er den beste typen god.",  // bekreftelse
+  /* 63 */ "Hvis livet er et måltid, er du Sabrura søndag middag.",  // lekent
+  /* 64 */ "Jeg synes du er pen i alle slags lys. Det er ikke noe jeg sier. Jeg har sjekket.",  // romantisk
+  /* 65 */ "Du har lov til å ville det du vil. Du trenger ikke forsvare det for noen.",  // bekreftelse
+  /* 66 */ "Forslag: erklær det søvnige ansiktet ditt som UNESCO-arv.",  // lekent
+  /* 67 */ "Jeg elsker måten du sier navnet mitt på når du ikke følger med.",  // romantisk
+  /* 68 */ "Du er genuint nysgjerrig på folk. Det gjør deg bedre selskap enn de fleste.",  // bekreftelse
+  /* 69 */ "Forbehold: søtheten i dette forholdet er stort sett din skyld.",  // lekent
+  /* 70 */ "Jeg elsker det alvorlige ansiktet ditt, det du har når du løser noe bare du ser.",  // romantisk
+  /* 71 */ "Du trenger ikke være produktiv hver dag. Du gjør allerede mer enn nok.",  // bekreftelse
+  /* 72 */ "Varsel: spredte kyss, høy kjærlighet, null sjanse for at du er irriterende.",  // lekent
+  /* 73 */ "Det å være sammen med deg er det beste jeg gjør.",  // romantisk
+  /* 74 */ "Du tilgir uten å være naiv. Du holder fortsatt folk ansvarlige. Det er ikke alle som klarer.",  // bekreftelse
+  /* 75 */ "Observert: en rålekker skapning i kjøkkenet vårt. Mistenkt: du.",  // lekent
+  /* 76 */ "Er så glad vi begge var med på den hytteturen.",  // romantisk
+  /* 77 */ "Du er snill og blir ikke utnyttet for det. Det er en ferdighet folk undervurderer.",  // bekreftelse
+  /* 78 */ "Påminnelse: vann, snacks, og minst et kompliment fra meg. Anvefalt daglig minimumsdose.",  // lekent
+  /* 79 */ "Jeg sover bedre når du er der.",  // romantisk
+  /* 80 */ "Elsker følelsen av leppene dine mot mine.",  // bekreftelse
+  /* 81 */ "Håper du har en fin dag *smask*",  // lekent
+  /* 82 */ "Ingenting bedre en stille stunder med deg.",  // romantisk
+  /* 83 */ "Du er der du skal være. Ikke etter skjema, ikke bak. Akkurat der.",  // bekreftelse
+  /* 84 */ "Urettferdig pen, bare glad det er ejg som får nyte synet.",  // lekent
+  /* 85 */ "Jeg elsker kinnene dine. Jeg elsker at denne lista bare fortsetter å vokse.",  // romantisk
+  /* 86 */ "Du har spesifikk smak. Du gjør ting på din måte. Det er en av tingene jeg liker best.",  // bekreftelse
+  /* 87 */ "Gleder meg sånn til å eie et sted som bare er vårt.",  // lekent
+  /* 88 */ "Jeg legger stadig merke til nye fregner, som om noen fortsatt jobber med maleriet.",  // romantisk
+  /* 89 */ "Har lyst til å kysse hver centimeter av deg.",  // bekreftelse
+  /* 90 */ "Du har så fine øyne altså wow.",  // lekent
+  /* 91 */ "Jeg elsker hverdagen med deg.",  // romantisk
+  /* 92 */ "Setter utrolig pris på altdu gjør for meg.",  // bekreftelse
+  /* 93 */ "Dagens stemning: du, men litt mer. Ikonisk. Uerstattelig.",  // lekent
+  /* 94 */ "Det å være sammen med deg er ikke spennende på en stressende måte. Det er bare bra.",  // romantisk
+  /* 95 */ "Du lytter ordentlig. Folk merker det. De forteller deg ting de ikke forteller andre.",  // bekreftelse
+  /* 96 */ "Forsiktig: ikke se direkte på smilet hennes i mer enn 11 sekunder sammenhengende. Da er du fanget.",  // lekent
+  /* 97 */ "Jeg elsker middagene våres sammen.",  // romantisk
+  /* 98 */ "Tenker fortsatt ofte på første kvelden jeg var med deg hjem.",  // bekreftelse
+  /* 99 */ "Statusrapport: fortsatt vanvittig, pinlig glad i deg. Ingen kommentarer.",  // lekent
+  /*100 */ "Helt fantastisk er du, vis folk hvem som er sjefen i dag.",  // romantisk
+  /*101 */ "Burde spilt inn stemmen din så kunne jeg hatt deg på øret konstant.",  // bekreftelse
+  /*102 */ "Verdens beste kjæreste, utrolig takknemgli for deg.",  // lekent
+  /*103 */ "Jeg elsker å være personen du forteller de små tingene til. De små tingene er hele livet.",  // romantisk
+  /*104 */ "Ser frem til vår neste vinbar date. Denne gangen uten en Daleng i smoking kanskje.",  // bekreftelse
+  /*105 */ "VIVAA LA VIDAAA LEVER SOM ALDRI FØØØØR",  // lekent
+  /*106 */ "Utrolig koselig at gårsdagens sang er vår.",  // romantisk
+  /*107 */ "Gleder emg til å se resten av verden med deg.",  // bekreftelse
+  /*108 */ "Håper du har hatt en god natts søvn, så må du huske å ta pauser i dag.",  // lekent
+  /*109 */ "Jeg elsker måten du sier god natt på, som om du mener det som et løfte.",  // romantisk
+  /*110 */ "Shit du er fin.",  // bekreftelse
+  /*111 */ "Ingen som kan få det til å være så morsomt å synge 'Kuk oppi fitta'",  // lekent
+  /*112 */ "Er så godt å sovne sammen.",  // romantisk
+  /*113 */ "Wow for en babe.",  // bekreftelse
+  /*114 */ "Hot take: du. Bare — du. Det er taken.",  // lekent
+  /*115 */ "Jeg elsker blikket du gir når jeg sier noe dumt.",  // romantisk_______ HER ER SISTE DU HAR SKREVET SELV NÅ KOMMER AI
+  /*116 */ "Du er god på å sette grenser. Det er en av de mest praktiske tingene en voksen kan kunne.",  // bekreftelse
+  /*117 */ "OBS: du er fortsatt uforklarlig søtest. Myndighetene står fast.",  // lekent
+  /*118 */ "Jeg elsker måten du husker ting om folk de hadde glemt at de fortalte deg.",  // romantisk
+  /*119 */ "Du er sensitiv på en nyttig måte — du fanger opp ting andre overser.",  // bekreftelse
+  /*120 */ "Varsel: høytrykk av hengivenhet beveger seg inn fra sørvest (meg).",  // lekent
+  /*121 */ "Noen morgener er det første jeg merker pusten din, og jeg er straks mindre redd.",  // romantisk
+  /*122 */ "Du har holdt på å være snill selv når livet ikke har gitt deg grunn til det. Det er valgt.",  // bekreftelse
+  /*123 */ "Hvis det å smile til deg var en jobb, ville jeg blitt forfremmet to ganger allerede.",  // lekent
+  /*124 */ "Jeg elsker den lille dansen du gjør når du har husket noe godt.",  // romantisk
+  /*125 */ "Du har lov til å ta plass. Den plassen du tar er bedre med deg i den.",  // bekreftelse
+  /*126 */ "Lokal korrespondent (jeg) rapporterer: fortsatt ekstremt myk for deg. Saken pågår.",  // lekent
+  /*127 */ "Jeg elsker håndleddene dine. Jeg elsker vekten av hånden din på brystet mitt kl. fire om morgenen.",  // romantisk
+  /*128 */ "Du blir oppriktig glad over små ting. Det er en ferdighet folk taper med alderen, og du har den fortsatt.",  // bekreftelse
+  /*129 */ "Timeplan for i dag: snacks, lur, vær uimotståelig, gjenta.",  // lekent
+  /*130 */ "Jeg elsker hvordan du har søvnen i ansiktet om morgenen, som et mildt argument for å bli liggende.",  // romantisk
+  /*131 */ "Du har lov til å trenge ting fra meg. Det er ikke et nederlag — det er sånn det fungerer.",  // bekreftelse
+  /*132 */ "Daglig påminnelse: håret ditt gjør den greia igjen og det går faktisk for langt nå.",  // lekent
+  /*133 */ "Jeg elsker deg i lange setninger og i stillheten mellom dem.",  // romantisk
+  /*134 */ "Du er en stødig person. Folk legger merke til det. Det er en av tingene de stoler på ved deg.",  // bekreftelse
+  /*135 */ "Bekreftet av uavhengige observatører (meg, tre ganger): du er ekstremt elsket i dag.",  // lekent
+  /*136 */ "Jeg elsker når du stopper midt på fortauet for å se på noe jeg ville oversett.",  // romantisk
+  /*137 */ "Du har lov til å ombestemme deg uten å forklare det for noen.",  // bekreftelse
+  /*138 */ "Dagens spesialitet: du, lett ristet av morgensolen, servert med kaffe.",  // lekent
+  /*139 */ "Det å være sammen med deg har gjort meg flinkere til å legge merke til ting.",  // romantisk
+  /*140 */ "Du er myk uten å være naiv. Du vet hva folk er, og er fortsatt vennlig med dem.",  // bekreftelse
+  /*141 */ "Daglig påminnelse: du er ikke et utkast. Du er den endelige versjonen, og du blir bedre likevel.",  // lekent
+  /*142 */ "Jeg elsker det sovende ansiktet ditt. Det er det mest ærlige ansiktet du har.",  // romantisk
+  /*143 */ "Du gir folk fordelen av tvilen uten å være dum med det. Det er ikke lett.",  // bekreftelse
+  /*144 */ "Oppdatering fra felten: hun lo igjen. Jeg er ikke ok. (På den gode måten.)",  // lekent
+  /*145 */ "Jeg elsker måten øynene dine blir stille på når du virkelig lytter.",  // romantisk
+  /*146 */ "Du må ikke fortjene en fridag. Du har allerede fortjent den. Tre ganger om.",  // bekreftelse
+  /*147 */ "Dagens overskrift: kvinne fortsetter rett og slett å være seg selv, regionen rammet på beste mulige måte.",  // lekent
+  /*148 */ "Jeg elsker når du synger uten å skjønne det. Det er lydsporet jeg ikke visste jeg trengte.",  // romantisk
+  /*149 */ "Du møter opp. Igjen og igjen, på det som er viktig. Det er den mest undervurderte styrken som finnes.",  // bekreftelse
+  /*150 */ "Handlingssammendrag så langt: jenta er fantastisk, gutten er fortsatt heldig, ingen oppdateringer.",  // lekent
+  /*151 */ "Jeg elsker måten du strekker deg om morgenen — som en katt i sakte uenighet med dagen.",  // romantisk
+  /*152 */ "Du er ikke noe jeg trenger å fikse på. Du er bare en jeg liker å være sammen med.",  // bekreftelse
+  /*153 */ "Varsel for uka: du, med sjanse for mer du mot helga.",  // lekent
+  /*154 */ "Jeg elsker hendene dine når du konsentrerer deg — den lille forsiktige arkitekturen i dem.",  // romantisk
+  /*155 */ "Du fortjener å være like snill med deg selv som du er med alle andre.",  // bekreftelse
+  /*156 */ "Forbehold: alle hjerteøyne jeg lager i dag er uten manus og helt din skyld.",  // lekent
+  /*157 */ "Jeg elsker hvordan du lager te — som om kjelen er noe du skal være snill mot.",  // romantisk
+  /*158 */ "Du sammenligner deg med folk du ikke trenger å sammenligne deg med. Du er allerede der.",  // bekreftelse
+  /*159 */ "Dagens stemning: du, i mykt lys, helt uten kommentarer fra meg.",  // lekent
+  /*160 */ "Noen netter ligger jeg våken bare for å høre på det lille været av deg som sover.",  // romantisk
+  /*161 */ "Latteren din er en av yndlingslydene mine. Det er ikke en figur — jeg har et lite mentalt arkiv.",  // bekreftelse DETTE ER OGSÅ AI PASS OPP, mellom her og 115
+  /*162 */ "Hei elskling, håper du likte gaven din! Herregud som jeg har slitt med å ikke gi den til deg tidligere. Det kommer en gave på bursdagen din også, men tanken var å gi deg denne til deg litt i forkant. Så hadde du noe koselig å sitte med i forkant. Jeg elsker deg utrolig høyt og gleder meg sånn til det er oss hver dag.",  // lekent
+  /*163 */ "Jeg elsker deg.",  // romantisk
+  /*164 */ "Du har lov til å ha en helt vanlig dag og bare ta det med ro.",  // bekreftelse
+  /*165 */ "Smiler bare ved tanken på deg.",  // lekent
+  /*166 */ "Jeg elsker når du kryper opp inntil meg under dyna.",  // romantisk
+  /*167 */ "Du fortjener skikkelig ros for toamt pastaen din, så enkel og så god.",  // bekreftelse
+  /*168 */ "Du er den aller beste.",  // lekent
+  /*169 */ "Oss to for alltid.",  // romantisk
+  /*170 */ "Du må ikke fortjene hvile. Gjør mer enn nok for det.",  // bekreftelse
+  /*171 */ "Hei elskling, håper du har en fin dag.",  // lekent
+  /*172 */ "Fineste vakreste jenta i hele verden, også er du min?!?",  // romantisk
+  /*173 */ "Herregud så heldig jeg er som får sett hele deg.",  // bekreftelse
+  /*174 */ "Er så glad du sjekket meg opp på den hytteturen, og så klart falt jeg pladask for det.",  // lekent
+  /*175 */ "Jeg elsker når du legger hodet på brystet mitt som om du arkiverer meg under «trygt».",  // romantisk
+  /*176 */ "Livet mitt har blitt så mye bedre etter at du kom inn i det.",  // bekreftelse
+  /*177 */ "Blir så godt å komme hjem til deg igjen i dag.",  // lekent
+  /*178 */ "27 Juni i dag, Gratulerer med dagen jenta mi! Jeg elsker deg utrolig høyt, så håper jeg du har en utrolig fin dag. Så er jeg veldig glad for at ejg får tilbrakt den med deg<33",  // romantisk
+  /*179 */ "Nytt funn: langvarig øyekontakt med deg forbedrer livskvalitet betydelig.",  // bekreftelse
+  /*180 */ "Du knuser det hver dag, stå på elskling!!",  // lekent
+  /*181 */ "Jeg elsker å holde rundt deg til du sakte forsvinner inn i drømmeland.",  // romantisk
+  /*182 */ "Du er ettertenksom på en måte de fleste ikke klarer, det setter jeg veldig pris på.",  // bekreftelse
+  /*183 */ "Offisielt midten av året, og du er fortsatt høydepunktet. Tallene lyver ikke.",  // lekent
+  /*184 */ "Noen dager vil jeg bare sitte med pannen mot din og la verden fortsette uten oss.",  // romantisk
+  /*185 */ "Du takler tunge ting godt. Ikke ved å overse dem, ved å gå rett inn i dem, det er veldig sterkt.",  // bekreftelse
+  /*186 */ "Status: du har igjen ødelagt vanlige dager for meg. Nekter å sende klage.",  // lekent
+  /*187 */ "Jeg elsker å våkne opp ved siden av deg og gleder meg sånn til det er normen.",  // romantisk
+  /*188 */ "Elsker å kysse hver eneste centimeter av kroppen din.",  // bekreftelse
+  /*189 */ "Alltid godt å ha deg inntil meg.",  // lekent
+  /*190 */ "Jeg elsker hverdagen med deg.",  // romantisk
+  /*191 */ "Du er den beste vennen jeg kunne hatt.",  // bekreftelse
+  /*192 */ "Alt for lite tid brukt på å stirre på deg. Må bruke mer fremover.",  // lekent
+  /*193 */ "Elsker rolige stunder med deg på hytta.",  // romantisk
+  /*194 */ "Jeg elsker hvordan du alltid finner noe fint i dagen, selv når den er tung.", // romantisk
+  /*195 */ "Du gjør vanlige tirsdager til noe jeg faktisk gleder meg til.",  // bekreftelse
+  /*196 */ "Dagens prognose: høy risiko for at jeg savner deg før lunsj.",  // lekent
+  /*197 */ "Jeg kunne sett på deg gjøre helt vanlige ting i timevis.",  // romantisk
+  /*198 */ "Du får folk rundt deg til å føle seg tryggere. Det er en gave.",  // bekreftelse
+  /*199 */ "Mistenkelig hvor pen du klarer å være uten å prøve.",  // lekent
+  /*200 */ "Jeg liker livet mitt mye bedre etter at du ble en del av det.",  // romantisk
+  /*201 */ "Du er flink til å få ting gjort uten å miste deg selv på veien.",  // bekreftelse
+  /*202 */ "Oppdatering: fortsatt forelsket. Kritisk nivå nå egentlig.",  // lekent
+  /*203 */ "Jeg elsker å høre deg snakke om ting du bryr deg om.",  // romantisk
+  /*204 */ "Du er mer tålmodig enn folk skjønner.",  // bekreftelse
+  /*205 */ "Dagens lille oppgave: tenk minst én snill tanke om deg selv.",  // lekent
+  /*206 */ "Jeg savner deg allerede før du har gått ut døra.",  // romantisk
+  /*207 */ "Du gjør vanskelige ting uten å lage drama av det. Det er imponerende.",  // bekreftelse
+  /*208 */ "Du burde egentlig fått bot for å være så distraherende pen.",  // leken
+  /*209 */ "Jeg elsker hvordan hånden din føles i min.",  // romantisk
+  /*210 */ "Du er den typen person folk husker lenge etter de har møtt deg.",  // bekreftelse
+  /*211 */ "Ny studie viser at du er uimotståelig. Kilde: meg.",  // lekent
+  /*212 */ "Det er så fint å ha noen å komme hjem til som deg.",  // romantisk
+  /*213 */ "Du er sterk på en rolig måte. Det er den beste typen sterk.",  // bekreftelse
+  /*214 */ "Varsel: jeg kommer til å kysse deg ekstra mye neste gang vi sees.",  // lekent
+  /*215 */ "Jeg elsker måten du ler med hele ansiktet.",  // romantisk
+  /*216 */ "Du er flink til å få andre til å føle seg sett.",  // bekreftelse
+  /*217 */ "Hvis søthet var en sport hadde du vært verdensmester.",  // lekent
+  /*218 */ "Jeg føler meg heldig hver eneste dag som får være din.",  // romantisk
+  /*219 */ "Du har en ro over deg som gjør alt litt lettere.",  // bekreftelse
+  /*220 */ "Dagens observasjon: fortsatt altfor glad i deg.",  // lekent
+  /*221 */ "Jeg elsker å våkne ved siden av deg.",  // romantisk
+  /*222 */ "Du er modigere enn du gir deg selv kreditt for.",  // bekreftelse
+  /*223 */ "Håper dagen din blir like fin som du er. Lykke til med å toppe det da.",  // lekent
+  /*224 */ "Du er favorittpersonen min å gjøre ingenting med.",  // romantisk
+  /*225 */ "Du tar vare på folk uten at de trenger å spørre.",  // bekreftelse
+  /*226 */ "Breaking news: smilet ditt fungerer fortsatt som våpen.",  // lekent
+  /*227 */ "Jeg elsker hvordan du alltid finner tilbake til meg i et rom.",  // romantisk
+  /*228 */ "Du er utrolig gjennomført som person.",  // bekreftelse
+  /*229 */ "Påminnelse: drikk vann og la meg forgude deg litt i fred.",  // lekent
+  /*230 */ "Jeg vil ha mange flere helt vanlige dager med deg.",  // romantisk
+  /*231 */ "Du er god til å få folk til å føle seg viktige.",  // bekreftelse
+  /*232 */ "Hvis jeg fikk én gratis tanke hele dagen ville jeg fortsatt brukt den på deg.",  // lekent
+  /*233 */ "Jeg elsker den rolige stemmen din om morgenen.",  // romantis
+  /*234 */ "Du er utrolig reflektert uten å bli kald.",  // bekreftelse
+  /*235 */ "Advarsel: du er fortsatt altfor søt til å håndtere ansvarlig.",  // lekent
+  /*236 */ "Det føles som hjemme når jeg er med deg.",  // romantisk
+  /*237 */ "Du gjør små ting på en måte som betyr mye.",  // bekreftelse
+  /*238 */ "Dagens fakta: jeg hadde valgt deg igjen uten å tenke.",  // lekent
+  /*239 */ "Jeg elsker når du sovner tett inntil meg.",  // romantisk
+  /*240 */ "Du er utrolig lett å være glad i.",  // bekreftelse
+  /*241 */ "Rapport: kinnene dine fortsatt ekstremt kyssbare.",  // lekent
+  /*242 */ "Jeg blir fortsatt litt satt ut av hvor fin du er.",  // romantisk
+  /*243 */ "Du har en egen evne til å roe ned kaos.",  // bekreftelse
+  /*244 */ "Hvis jeg fikk betalt for å tenke på deg hadde jeg vært rik.",  // lekent
+  /*245 */ "Jeg elsker måten du sier navnet mitt på når du er trøtt.",  // romantisk
+  /*246 */ "Du er så flink til å stå opp for folk du bryr deg om.",  // bekreftelse
+  /*247 */ "Dagens anbefaling: vær litt ekstra snill mot verdens fineste jente.",  // lekent
+  /*248 */ "Jeg gleder meg til alle stedene vi fortsatt ikke har vært sammen.",  // romantisk
+  /*249 */ "Du er trygghet uten å være kjedelig.",  // bekreftelse
+  /*250 */ "Status: fortsatt forelsket på et nesten pinlig nivå.",  // lekent
+  /*251 */ "Jeg elsker å høre deg le fra et annet rom.",  // romantisk
+  /*252 */ "Du får folk til å føle seg komfortable bare ved å være deg selv.",  // bekreftelse
+  /*253 */ "Viktig melding: du er dagens høydepunkt igjen.",  // lekent
+  /*254 */ "Jeg liker hvordan verden føles når du er i nærheten.",  // romantisk
+  /*255 */ "Du er mye klokere enn du later som.",  // bekreftelse
+  /*256 */ "Forsiktig: lang øyekontakt med deg kan føre til forelskelse.",  // lekent
+  /*257 */ "Jeg elsker alle de små rutinene vi har fått sammen.",  // romantisk
+  /*258 */ "Du er flink til å være ærlig uten å være hard.",  // bekreftelse
+  /*259 */ "Dagens plan: savne deg litt, kysse deg mye.",  // lekent
+  /*260 */ "Du gjør meg roligere bare ved å være nær.",  // romantisk
+  /*261 */ "Du er den typen menneske som gjør et sted bedre bare ved å komme inn døra.",  // bekreftels
+  /*262 */ "Forskning viser at du er ekstra fin i hettegenser.",  // lekent
+  /*263 */ "Jeg elsker hvordan du ser på meg når du tror jeg ikke merker det.",  // romantisk
+  /*264 */ "Du har en utrolig god balanse mellom snill og sterk.",  // bekreftelse
+  /*265 */ "Ny regel: du har ikke lov til å tvile på hvor fantastisk du er.",  // lekent
+  /*266 */ "Jeg vil fortsatt sitte ved siden av deg når vi er gamle og rare.",  // romantisk
+  /*267 */ "Du får ting til å føles mulig.",  // bekreftelse
+  /*268 */ "Dagens fun fact: jeg smiler som en idiot når du sender melding.",  // lekent
+  /*269 */ "Jeg elsker måten du alltid finner noe å le av.",  // romantisk
+  /*270 */ "Du er veldig lett å stole på.",  // bekreftelse
+  /*271 */ "Varsel om kjærlighet: ekstremt høyt nivå i ditt område.",  // lekent
+  /*272 */ "Jeg kunne valgt deg i hvert eneste univers.",  // romantisk
+  /*273 */ "Du er mer omsorgsfull enn folk får med seg ved førsteinntrykk.",  // bekreftelse
+  /*274 */ "Hvis skjønnhet var skattbart hadde du ruinert økonomien.",  // lekent
+  /*275 */ "Jeg elsker de stille minuttene med deg mest av alt.",  // romantisk
+  /*276 */ "Du er flink til å gjøre folk trygge nok til å være seg selv.",  // bekreftelse
+  /*277 */ "Dagens mål: få deg til å smile minst tre ganger.",  // leken
+  /*278 */ "Jeg savner deg på den rolige måten som bare betyr at du er hjemme for meg.",  // romantisk
+  /*279 */ "Du har utrolig fin energi.",  // bekreftelse
+  /*280 */ "Rapport fra hjertet: fortsatt helt håpløst glad i deg.",  // leke
+  /*281 */ "Jeg elsker å høre deg fortelle historier.",  // romantisk
+  /*282 */ "Du er god til å få andre til å føle seg inkludert.",  // bekreftelse
+  /*283 */ "Dagens observasjon: du er fortsatt absurd pen.",  // lekent
+  /*284 */ "Jeg liker hvordan du passer inn i alle planene mine.",  // romantisk
+  /*285 */ "Du er sterk nok til å være myk. Det er sjeldent.",  // bekreftels
+  /*286 */ "Påminnelse: verdens søteste jente må huske å spise lunsj.",  // lekent
+  /*287 */ "Jeg elsker den konsentrerte rynken din.",  // romantisk
+  /*288 */ "Du er utrolig god til å lese mennesker.",  // bekreftelse
+  /*289 */ "Breaking: fortsatt ikke over hvor heldig jeg er.",  // lekent
+  /*290 */ "Jeg føler meg mest som meg selv med deg.",  // romantisk
+  /*291 */ "Du har en varme som folk trekkes mot.",  // bekreftelse
+  /*292 */ "Hvis jeg måtte beskrive favorittfølelsen min hadde det bare vært deg.",  // leken
+  /*293 */ "Jeg elsker hvordan du alltid prøver.",  // romantisk
+  /*294 */ "Du er mer enn nok akkurat som du er.",  // bekreftelse
+  /*295 */ "Advarsel: overdreven søthet oppdaget i dette forholdet.",  // lekent
+  /*296 */ "Jeg gleder meg til flere morgener med deg.",  // romantisk
+  /*297 */ "Du får folk til å føle seg forstått.",  // bekreftelse
+  /*298 */ "Dagens nyhet: jeg liker deg fortsatt mer enn kaffe.",  // lekent
+  /*299 */ "Jeg elsker hvordan du alltid finner hånden min.",  // romantisk
+  /*300 */ "Du er utrolig tilstede når noen trenger deg.",  // bekreftelse
+  /*301 */ "Varsel: jeg kommer til å stjele minst ett kyss senere.",  // lekent
+  /*302 */ "Jeg vil aldri bli lei av ansiktet ditt.",  // romantisk
+  /*303 */ "Du er veldig flink til å være deg selv.",  // bekreftelse
+  /*304 */ "Dagens status: fortsatt helt obsessed med kjæresten min.",  // lekent
+  /*305 */ "Jeg elsker at vi kan være stille sammen uten at det blir rart.",  // romantis
+  /*306 */ "Du gjør kjærlighet enkelt.",  // bekreftels
+  /*307 */ "Offentlig tjenestemelding: hun er fortsatt den fineste.",  // lekent
+  /*308 */ "Jeg liker hver eneste versjon av deg.",  // romantisk
+  /*309 */ "Du er god til å finne løsninger uten å miste humoren.",  // bekreftelse
+  /*310 */ "Forslag: la meg holde rundt deg litt ekstra i dag.",  // lekent
+  /*311 */ "Jeg elsker å bygge et liv med deg.",  // romantis
+  /*312 */ "Du har et veldig fint hjerte.",  // bekreftelse
+  /*313 */ "Rapport: du er fortsatt uimotståelig i joggebukse.",  // lekent
+  /*314 */ "Jeg elsker hvordan du får meg til å føle meg valgt.",  // romantisk
+  /*315 */ "Du er flink til å se når folk trenger litt ekstra omsorg.",  // bekreftelse
+  /*316 */ "Dagens utfordring: prøv å ikke være så søt. Umulig, jeg vet.",  // lekent
+  /*317 */ "Jeg kunne kysset deg i flere timer uten å bli lei.",  // romantisk
+  /*318 */ "Du er utrolig god på de små tingene som faktisk betyr noe.",  // bekreftelse
+  /*319 */ "Ny teori: du blir penere hver uke.",  // lekent
+  /*320 */ "Jeg elsker måten du ser ut når du nettopp har våknet.",  // romantisk
+  /*321 */ "Du er mye sterkere enn du tror.",  // bekreftelse
+  /*322 */ "Dagens værmelding: varme klemmer og høy forelskelse.",  // lekent
+  /*323 */ "Jeg liker hvordan vi fungerer sammen.",  // romantisk
+  /*324 */ "Du får folk til å føle seg viktige uten å prøve.",  // bekreftelse
+  /*325 */ "Breaking news: kjæresten min er fortsatt helt fantastisk.",  // lekent
+  /*326 */ "Jeg elsker hvordan du alltid finner tilbake til optimismen.",  // romantisk
+  /*327 */ "Du er rolig på en måte som smitter.",  // bekreftelse
+  /*328 */ "Dagens observasjon: du ser ekstra fin ut i dag.",  // lekent
+  /*329 */ "Jeg vil ha flere netter der vi bare sovner tett sammen.",  // romantis
+  /*330 */ "Du er flink til å gjøre plass til andre uten å gjøre deg mindre.",  // bekreftelse
+  /*331 */ "Varsel: høyt nivå av kjærlighet registrert i nærheten av deg.",  // lekent
+  /*332 */ "Du er ikke den samme som for et år siden. Det er en seier — det betyr at du beveger deg.",  // bekreftelse
+  /*333 */ "Trippel statusrapport: fortsatt myk, fortsatt myk, fortsatt myk. Systemet virker.",  // lekent
+  /*334 */ "Jeg elsker når du har på deg hettegenseren min. Jeg elsker at den kjenner deg bedre nå enn den kjenner meg.",  // romantisk
+  /*335 */ "Du tar imot komplimenter dårlig på en søt måte. Sjenert halvsmil, øyne ned. Jeg elsker det.",  // bekreftelse
+  /*336 */ "Dagens kalorier: irrelevant. Dagens kysseteller: utilstrekkelig. Justeringer kommer.",  // lekent
+  /*337 */ "Jeg elsker det lille innpustet du tar før du sier noe du faktisk mener.",  // romantisk
+  /*338 */ "Du må ikke tilgi noen på en tidsplan. Det inkluderer deg selv.",  // bekreftelse
+  /*339 */ "Forslag: installer et lite permanent søkelys på deg. (Et finnes allerede. Det er meg.)",  // lekent
+  /*340 */ "Jeg elsker når du sovner før filmen er ferdig og hånden din blir stille i min.",  // romantisk
+  /*341 */ "Du nekter å bli kynisk. I denne verden er det et valg, og det er et godt et.",  // bekreftelse
+  /*342 */ "Dagens offisielle vedtak: vær mild mot mennesket som er deg. Signert, ledelsen (meg).",  // lekent
+  /*343 */ "Jeg elsker hvordan du sier «hei, du» som om du har lett etter meg helt spesifikt.",  // romantisk
+  /*344 */ "Du er like snill mot servitører som mot venner. Det er kanskje det viktigste å vite om en person.",  // bekreftelse
+  /*345 */ "Daglig varsel: kort tordenbyge av komplimenter tidlig på ettermiddagen. Ta med paraply, mist den med vilje.",  // lekent
+  /*346 */ "Jeg elsker øyeblikket du våkner og ansiktet ditt ennå ikke har bestemt seg for hva slags dag det er.",  // romantisk
+  /*347 */ "Du er stolt av vennene dine uten å konkurrere med dem. Det er noe av det mest voksne jeg vet.",  // bekreftelse
+  /*348 */ "I dag: du, svakt motlys fra et kjøkkenvindu, med en kopp i hånda. Ikonisk. Maleri.",  // lekent
+  /*349 */ "Jeg elsker når du strekker deg over bordet midt i en samtale og stjeler en chips uten å miste blikkontakten.",  // romantisk
+  /*350 */ "Du er ikke det verste noen har sagt om deg. Du er ikke i nærheten.",  // bekreftelse
+  /*351 */ "Lokale undersøkelser viser: du er fortsatt den beste tingen i denne leiligheten. Utvalg: meg.",  // lekent
+  /*352 */ "Jeg elsker det lille ufrivillige smilet du får når noen sier navnet mitt foran deg.",  // romantisk
+  /*353 */ "Du er myk etter en hard dag. Det er ikke svakhet — det er en bevisst beslutning hver gang.",  // bekreftelse
+  /*354 */ "Timeplan for resten av uka: bli elsket, ta luren, drikk vann, bli elsket litt til.",  // lekent
+  /*355 */ "Jeg elsker når du heller hodet bakover av latter, og rommet i et øyeblikk tilhører deg.",  // romantisk
+  /*356 */ "Du må ikke være forberedt på alt. Du har lov til å bli overrasket — også på en god måte.",  // bekreftelse
+  /*357 */ "Dagens tilgjengelige antrekk: hva som helst du allerede har bestemt deg for. Dom: nydelig. Retten heves.",  // lekent
+  /*358 */ "Jeg elsker når du spør meg om noe du allerede vet svaret på, bare for å høre meg si det.",  // romantisk
+  /*359 */ "Du er ærlig om dine egne redsler. Det er en av de modigste tingene jeg vet om deg.",  // bekreftelse
+  /*360 */ "Årsrapport: du er fortsatt hovedpersonen i mine beste kapitler. Fornyer for en sesong til.",  // lekent
+  /*361 */ "Jeg elsker når du slukker lyset og finner hånden min i mørket uten å se.",  // romantisk
+  /*362 */ "Du går ikke tom for tid. Du er akkurat i tide til ditt eget liv.",  // bekreftelse
+  /*363 */ "Sent-på-året-varsel: vedvarende bølger av hengivenhet; utmerket sikt hvis du ser deg i speilet.",  // lekent
+  /*364 */ "Jeg elsker at vi får et år til med små morgener, kjelen, hunden, ansiktet ditt, lyset.",  // romantisk
+  /*365 */ "Av alle årene jeg har levd, er de med deg i dem de jeg ville gjort om igjen, akkurat slik.",  // romantisk
+];
+
+/* =====================================================================
+   DAY-OF-YEAR LOGIC
+   ===================================================================== */
+
+function getDayOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date - start
+    + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('nb-NO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
+}
+
+function render() {
+  const now = new Date();
+  const doy = getDayOfYear(now);                  // 1–366
+  const idx = ((doy - 1) % messages.length + messages.length) % messages.length;
+
+  const msgEl = document.getElementById('message');
+  msgEl.textContent = messages[idx];
+
+  document.getElementById('dateStamp').textContent = formatDate(now);
+  document.getElementById('dayMarker').textContent = `nr. ${idx + 1}`;
+}
+
+function scheduleMidnightRefresh() {
+  const now = new Date();
+  const tomorrow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 5      // 5 seconds past midnight to avoid edge cases
+  );
+  const msUntilMidnight = tomorrow - now;
+  setTimeout(() => {
+    // gentle cross-fade on refresh
+    const wrap = document.querySelector('.message-wrap');
+    wrap.style.transition = 'opacity 1s ease';
+    wrap.style.opacity = '0';
+    setTimeout(() => {
+      render();
+      wrap.style.opacity = '1';
+      scheduleMidnightRefresh();
+    }, 1000);
+  }, msUntilMidnight);
+}
+
+render();
+scheduleMidnightRefresh();
+</script>
+</body>
+</html>
