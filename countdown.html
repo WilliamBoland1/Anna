@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nedtelling</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --forest-dark: #1a2e1a;
+            --forest-mid: #2d4a2d;
+            --forest-light: #3a5c3a;
+            --gold-warm: #c9a84c;
+            --gold-light: #e8c97a;
+            --gold-dim: #9e7e38;
+            --cream: #f0ead6;
+            --cream-dim: #b8ad96;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--forest-dark);
+            background-image:
+                radial-gradient(ellipse at 50% 0%, var(--forest-light) 0%, var(--forest-mid) 30%, var(--forest-dark) 70%);
+            font-family: 'Nunito', sans-serif;
+            color: var(--cream);
+            padding: 3rem 2rem;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 860px;
+            width: 100%;
+        }
+
+        /* ── Headline ── */
+        .headline {
+            font-family: 'Dancing Script', cursive;
+            font-weight: 600;
+            font-size: clamp(2rem, 6vw, 3.6rem);
+            color: var(--cream);
+            line-height: 1.35;
+            margin-bottom: 2.8rem;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .divider-line {
+            height: 1px;
+            flex: 1;
+            max-width: 200px;
+            background: linear-gradient(to right, transparent, var(--gold-warm), transparent);
+        }
+
+        .divider-gem {
+            width: 6px;
+            height: 6px;
+            background: var(--gold-warm);
+            transform: rotate(45deg);
+            flex-shrink: 0;
+        }
+
+        /* ── Countdown ── */
+        .countdown {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: clamp(0.6rem, 3vw, 2.5rem);
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+
+        .unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+        }
+
+        .number {
+            font-family: 'Great Vibes', cursive;
+            font-weight: 400;
+            font-size: clamp(3.8rem, 11vw, 6.5rem);
+            color: var(--gold-light);
+            line-height: 1;
+            text-shadow:
+                0 0 60px rgba(232, 201, 122, 0.15),
+                0 2px 4px rgba(0, 0, 0, 0.4);
+            margin-bottom: 0.6rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .label {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 300;
+            font-size: clamp(0.6rem, 1.8vw, 0.75rem);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--cream-dim);
+        }
+
+        .sep {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.2rem, 7vw, 4.5rem);
+            color: var(--gold-dim);
+            line-height: 1;
+            padding-top: 0.1em;
+            opacity: 0.5;
+            align-self: flex-start;
+            user-select: none;
+        }
+
+        /* ── Reveal ── */
+        .reveal {
+            opacity: 0;
+            pointer-events: none;
+            display: none;
+        }
+
+        .reveal.show {
+            display: block;
+            animation: revealFade 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            pointer-events: auto;
+        }
+
+        @keyframes revealFade {
+            0%   { opacity: 0; transform: translateY(28px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .gift-link {
+            display: inline-block;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: clamp(0.75rem, 1.6vw, 0.9rem);
+            line-height: 1.6;
+            color: var(--forest-dark);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold-light) 45%, var(--gold-warm) 70%, var(--gold-light) 100%);
+            background-size: 250% 250%;
+            padding: 0.75rem 1.4rem;
+            border-radius: 1px;
+            max-width: 640px;
+            box-shadow:
+                0 4px 24px rgba(201, 168, 76, 0.18),
+                0 1px 3px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 4px 0 #6b5220,
+                0 6px 8px rgba(0, 0, 0, 0.35);
+            animation: shimmer 7s ease-in-out infinite;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50%       { background-position: 100% 50%; }
+        }
+
+        .gift-link:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 10px 36px rgba(201, 168, 76, 0.30),
+                0 2px 6px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 6px 0 #6b5220,
+                0 9px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 520px) {
+            .sep { display: none; }
+            .countdown { gap: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1 class="headline">Nedtelling til jenta mi sin bursdag</h1>
+
+        <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-gem"></div>
+            <div class="divider-line"></div>
+        </div>
+
+        <div class="countdown" id="countdown">
+            <div class="unit">
+                <div class="number" id="days">00</div>
+                <div class="label">dager</div>
+            </div>
+            <div class="sep">:</div>
+            <div class="unit">
+                <div class="number" id="hours">00</div>
+                <div class="label">timer</div>
+            </div>
+            <div class="sep">:</div>
+            <div class="unit">
+                <div class="number" id="minutes">00</div>
+                <div class="label">minutter</div>
+            </div>
+            <div class="sep">:</div>
+            <div class="unit">
+                <div class="number" id="seconds">00</div>
+                <div class="label">sekunder</div>
+            </div>
+        </div>
+
+        <div class="reveal" id="reveal">
+            <a class="gift-link" href="https://williamboland1.github.io/AnnaSpill/">
+                Gratulerer med dagen min jenta mi, jeg elsker deg utrolig høyt!<br>Trykk her for å bli tatt videre til del 1 av bursdagsgaven din ❤️
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        const TARGET = new Date('2026-06-27T00:00:00');
+
+        function pad(n) {
+            return String(n).padStart(2, '0');
+        }
+
+        function tick() {
+            const diff = TARGET - Date.now();
+
+            if (diff <= 0) {
+                document.getElementById('countdown').style.display = 'none';
+                document.getElementById('reveal').classList.add('show');
+                return;
+            }
+
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+
+            document.getElementById('days').textContent    = pad(d);
+            document.getElementById('hours').textContent   = pad(h);
+            document.getElementById('minutes').textContent = pad(m);
+            document.getElementById('seconds').textContent = pad(s);
+        }
+
+        tick();
+        setInterval(tick, 1000);
+    </script>
+</body>
+</html>
