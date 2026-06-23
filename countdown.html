@@ -110,7 +110,7 @@
         .label {
             font-family: 'Lato', sans-serif;
             font-weight: 300;
-            font-size: clamp(0.6rem, 1.8vw, 0.72rem);
+            font-size: clamp(0.75rem, 2.5vw, 0.85rem);
             letter-spacing: 0.32em;
             text-transform: uppercase;
             color: var(--cream-soft);
@@ -170,7 +170,15 @@
         /* ── Mobile ── */
         @media (max-width: 520px) {
             .sep { display: none; }
-            .countdown { gap: 1.4rem; }
+            .countdown { gap: 1rem; }
+            .unit { min-width: 58px; }
+            .gift-link {
+                display: block;
+                width: 100%;
+                padding: 1.2rem 1.2rem;
+                font-size: clamp(0.95rem, 4vw, 1.1rem);
+            }
+            body { padding: 1.5rem 1.2rem; }
         }
     </style>
 </head>
