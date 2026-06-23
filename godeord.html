@@ -6,29 +6,28 @@
 <title>godeord</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Caveat:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
 <style>
   /* ---------- base ---------- */
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
 
   :root {
-    --base:         #0a1929;   /* deep sea night */
-    --abyss:        #061320;   /* deepest water */
-    --deep:         #14304a;   /* mid sea */
-    --tide:         #1f4865;   /* tide blue */
-    --current:      #2d6788;   /* lighter current */
-    --foam:         #6fa8c4;   /* pale foam highlight */
-    --moonlight:    #a8c8dc;   /* moonlight on water */
-    --ink:          #d8e4ed;   /* pale ink (text on dark) */
-    --ink-soft:     #8aa5b8;   /* faded sea-mist text */
+    --base:         #1A3328;   /* deep forest */
+    --deep:         #0F2419;   /* darker forest */
+    --mid:          #2C4A3E;   /* mid green */
+    --sage:         #7A9E8E;   /* sage accent */
+    --sage-light:   #B5CCBF;   /* light sage */
+    --cream:        #F5F2EB;   /* warm parchment */
+    --cream-soft:   #9dbdb2;   /* faded text */
+    --gold:         #8B6914;   /* amber accent */
   }
 
   body {
     min-height: 100vh;
     min-height: 100dvh;
     background: var(--base);
-    color: var(--ink);
+    color: var(--cream);
     font-family: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
     overflow: hidden;
     position: relative;
@@ -36,23 +35,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* ---------- watercolour background ----------
-     Layered radial gradients create soft pigment blooms.
-     SVG turbulence overlay adds paper-bleed grain. */
   .wash {
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 70% 55% at 20% 20%, rgba(45, 103, 136, 0.55), transparent 65%),
-      radial-gradient(ellipse 60% 50% at 80% 25%, rgba(31, 72, 101, 0.65), transparent 65%),
-      radial-gradient(ellipse 75% 60% at 75% 80%, rgba(20, 48, 74, 0.70), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 15% 85%, rgba(45, 103, 136, 0.40), transparent 65%),
-      radial-gradient(ellipse 45% 40% at 50% 50%, rgba(111, 168, 196, 0.18), transparent 70%),
-      radial-gradient(ellipse 80% 70% at 50% 100%, rgba(6, 19, 32, 0.85), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 30% 40%, rgba(44, 74, 62, 0.55), transparent 70%),
       var(--base);
-    filter: blur(0.5px);
   }
 
   /* paper grain via SVG noise */
@@ -61,51 +51,13 @@
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    opacity: 0.07;
-  }
-
-  /* drifting petal particles */
-  .petals {
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .petal {
-    position: absolute;
-    bottom: -8vh;
-    width: 14px;
-    height: 14px;
-    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
-    opacity: 0;
-    animation: drift linear infinite;
-    will-change: transform, opacity;
-    filter: blur(0.5px);
-  }
-  .petal:nth-child(1)  { left:  8%; background: rgba(168, 200, 220, 0.45); animation-duration: 28s; animation-delay:  0s; }
-  .petal:nth-child(2)  { left: 22%; background: rgba(111, 168, 196, 0.40); animation-duration: 36s; animation-delay: -6s; transform: scale(0.7); }
-  .petal:nth-child(3)  { left: 35%; background: rgba(168, 200, 220, 0.35); animation-duration: 42s; animation-delay: -14s; transform: scale(1.1); }
-  .petal:nth-child(4)  { left: 48%; background: rgba(111, 168, 196, 0.40); animation-duration: 32s; animation-delay: -3s; transform: scale(0.85); }
-  .petal:nth-child(5)  { left: 60%; background: rgba(168, 200, 220, 0.50); animation-duration: 38s; animation-delay: -20s; transform: scale(0.6); }
-  .petal:nth-child(6)  { left: 72%; background: rgba(111, 168, 196, 0.35); animation-duration: 30s; animation-delay: -9s; }
-  .petal:nth-child(7)  { left: 85%; background: rgba(168, 200, 220, 0.40); animation-duration: 44s; animation-delay: -18s; transform: scale(1.2); }
-  .petal:nth-child(8)  { left: 92%; background: rgba(111, 168, 196, 0.30); animation-duration: 34s; animation-delay: -25s; transform: scale(0.75); }
-  .petal:nth-child(9)  { left: 15%; background: rgba(168, 200, 220, 0.40); animation-duration: 40s; animation-delay: -11s; transform: scale(0.9); }
-  .petal:nth-child(10) { left: 65%; background: rgba(111, 168, 196, 0.45); animation-duration: 26s; animation-delay: -16s; transform: scale(0.7); }
-
-  @keyframes drift {
-    0%   { transform: translateY(0)        translateX(0)     rotate(0deg)   scale(var(--s, 1)); opacity: 0; }
-    10%  { opacity: 0.7; }
-    50%  { transform: translateY(-50vh)    translateX(20px)  rotate(180deg) scale(var(--s, 1)); }
-    90%  { opacity: 0.4; }
-    100% { transform: translateY(-110vh)   translateX(-15px) rotate(360deg) scale(var(--s, 1)); opacity: 0; }
+    opacity: 0.05;
   }
 
   /* ---------- layout ---------- */
   .stage {
     position: relative;
-    z-index: 3;
+    z-index: 2;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
@@ -132,7 +84,7 @@
     margin: 0 auto 2.2rem;
     width: 60px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--foam), transparent);
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
     opacity: 0;
     animation: fadein 2s ease 0.4s forwards;
   }
@@ -141,7 +93,7 @@
     position: relative;
     top: -10px;
     background: transparent;
-    color: var(--foam);
+    color: var(--gold);
     font-size: 14px;
     opacity: 0.65;
   }
@@ -152,9 +104,9 @@
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
     font-style: italic;
-    font-size: clamp(1.6rem, 4.2vw, 2.6rem);
-    line-height: 1.45;
-    color: var(--ink);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    line-height: 1.5;
+    color: var(--cream);
     letter-spacing: 0.005em;
     margin: 0;
     text-wrap: balance;
@@ -162,12 +114,14 @@
 
   .signature {
     margin-top: 2.5rem;
-    font-family: 'Caveat', cursive;
-    font-size: clamp(1rem, 1.6vw, 1.15rem);
-    color: var(--ink-soft);
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(0.8rem, 1.4vw, 0.95rem);
+    font-weight: 300;
+    color: var(--cream-soft);
     opacity: 0;
     animation: fadein 2s ease 1.1s forwards;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
   }
 
   .date-stamp {
@@ -175,12 +129,14 @@
     top: 2rem;
     left: 2rem;
     z-index: 4;
-    font-family: 'Caveat', cursive;
-    font-size: 1.05rem;
-    color: var(--ink-soft);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 300;
+    color: var(--cream-soft);
     opacity: 0;
     animation: fadein 2.5s ease 1.5s forwards;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
   }
 
   .day-marker {
@@ -188,12 +144,14 @@
     bottom: 2rem;
     right: 2rem;
     z-index: 4;
-    font-family: 'Caveat', cursive;
-    font-size: 0.95rem;
-    color: var(--ink-soft);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 300;
+    color: var(--cream-soft);
     opacity: 0;
     animation: fadein 2.5s ease 1.5s forwards;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
   }
 
   @media (max-width: 600px) {
@@ -204,7 +162,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .petals { display: none; }
     .message-wrap, .ornament, .signature, .date-stamp, .day-marker {
       animation: fadein 0.6s ease forwards;
       opacity: 1;
@@ -236,14 +193,6 @@
   <rect width="100%" height="100%" filter="url(#paper)"/>
 </svg>
 
-<!-- drifting petals -->
-<div class="petals" aria-hidden="true">
-  <span class="petal"></span><span class="petal"></span><span class="petal"></span>
-  <span class="petal"></span><span class="petal"></span><span class="petal"></span>
-  <span class="petal"></span><span class="petal"></span><span class="petal"></span>
-  <span class="petal"></span>
-</div>
-
 <!-- date corner -->
 <div class="date-stamp" id="dateStamp"></div>
 <div class="day-marker" id="dayMarker"></div>
@@ -272,19 +221,19 @@
 const messages = [/*  1 */ "Jeg elsker måten du får meg til å le.",  // romantisk
   /*  2 */ "Du er flink. Skikkelig flink. Stå på!",  // bekreftelse
   /*  3 */ "Dagens værvarsel: 100 prosent sjanse for at du blir elsket, med spredte kyss mot kvelden.",  // lekent
-  /*  4 */ "Er så gheldig som har muligheten til å se deg, hver dag. Det er litt urettferdig alle andre egentlig.",  // romantisk
+  /*  4 */ "Er så heldig som har muligheten til å se deg, hver dag. Det er litt urettferdig alle andre egentlig.",  // romantisk
   /*  5 */ "Du er en av de få folkene jeg kjenner som faktisk har kontroll.",  // bekreftelse
   /*  6 */ "Påminnelse: du er noens favorittperson i dag. (Min. Det er meg.)",  // lekent
-  /*  7 */ "Du har de fineste øynene. Det er ikke noe jeg sier. Det er et faktum.",  // romantisk
-  /*  8 */ "Du er morsom. Den ekte typen morsom, som overrasker folk midt i en setning.",  // bekreftelse
+  /*  7 */ "Du har de fineste øynene, sånn helt sykt.",  // romantisk
+  /*  8 */ "Du er morsom, til og med morsommere enn meg.",  // bekreftelse
   /*  9 */ "Utrolig tekknemlig for at du valgte en tulling som meg.",  // lekent
-  /* 10 */ "Du er den peneste personen jeg kjenner. Jeg vet hva jeg snakker om.",  // romantisk
+  /* 10 */ "Du er den peneste personen jeg kjenner, med en god margin og.",  // romantisk
   /* 11 */ "Du får til utrolig mye. Jeg sier det ikke ofte nok, men jeg legger merke til det.",  // bekreftelse
-  /* 12 */ "Siste nytt: forskere bekrefter at du fortsatt er ekstremt pen.",  // lekent
+  /* 12 */ "Siste nytt: forskere bekrefter at du fortsatt er ekstremt vakker.",  // lekent
   /* 13 */ "Jeg tenker på deg mer enn jeg tenker på noe annet.",  // romantisk
   /* 14 */ "Håper du har en utrolig fin dag i dag, jenta mi.",  // bekreftelse
-  /* 15 */ "På en skala fra en til ti blåser du langt fordbi 10.",  // lekent
-  /* 16 */ "Jeg er bedre i rommet med deg. Jeg er roligere, morsommere, mer meg selv.",  // romantisk
+  /* 15 */ "På en skala fra en til ti blåser du langt forbi 10.",  // lekent
+  /* 16 */ "Jeg er bedre i rommet når du er med. Jeg er roligere, morsommere, mer meg selv.",  // romantisk
   /* 17 */ "Du har god smak. På mat, på folk, på det meste. Ikke minst i valg av kjæreste.",  // bekreftelse
   /* 18 */ "Forslag: gjør smilet ditt til en lovbeskyttet naturressurs.",  // lekent
   /* 19 */ "Du kommer til å bli en utrolig god mor, gleder meg sånn til å oppdra en sammen.",  // romantisk
@@ -435,7 +384,7 @@ const messages = [/*  1 */ "Jeg elsker måten du får meg til å le.",  // roman
   /*164 */ "Du har lov til å ha en helt vanlig dag og bare ta det med ro.",  // bekreftelse
   /*165 */ "Smiler bare ved tanken på deg.",  // lekent
   /*166 */ "Jeg elsker når du kryper opp inntil meg under dyna.",  // romantisk
-  /*167 */ "Du fortjener skikkelig ros for toamt pastaen din, så enkel og så god.",  // bekreftelse
+  /*167 */ "Du fortjener skikkelig ros for tomat pastaen din, så enkel og så god.",  // bekreftelse
   /*168 */ "Du er den aller beste.",  // lekent
   /*169 */ "Oss to for alltid.",  // romantisk
   /*170 */ "Du må ikke fortjene hvile. Gjør mer enn nok for det.",  // bekreftelse
@@ -446,12 +395,12 @@ const messages = [/*  1 */ "Jeg elsker måten du får meg til å le.",  // roman
   /*175 */ "Jeg elsker når du legger hodet på brystet mitt som om du arkiverer meg under «trygt».",  // romantisk
   /*176 */ "Livet mitt har blitt så mye bedre etter at du kom inn i det.",  // bekreftelse
   /*177 */ "Blir så godt å komme hjem til deg igjen i dag.",  // lekent
-  /*178 */ "27 Juni i dag, Gratulerer med dagen jenta mi! Jeg elsker deg utrolig høyt, så håper jeg du har en utrolig fin dag. Så er jeg veldig glad for at ejg får tilbrakt den med deg<33",  // romantisk
+  /*178 */ "27 Juni i dag, Gratulerer med dagen jenta mi! Jeg elsker deg utrolig høyt, så håper jeg du har en utrolig fin dag. Så er jeg veldig glad for at jeg får tilbrakt den med deg, det blir så godt å endelig få være sammen igjen<33",  // romantisk
   /*179 */ "Nytt funn: langvarig øyekontakt med deg forbedrer livskvalitet betydelig.",  // bekreftelse
   /*180 */ "Du knuser det hver dag, stå på elskling!!",  // lekent
-  /*181 */ "Jeg elsker å holde rundt deg til du sakte forsvinner inn i drømmeland.",  // romantisk
-  /*182 */ "Du er ettertenksom på en måte de fleste ikke klarer, det setter jeg veldig pris på.",  // bekreftelse
-  /*183 */ "Offisielt midten av året, og du er fortsatt høydepunktet. Tallene lyver ikke.",  // lekent
+  /*181 */ "Jeg elsker å holde rundt deg til vi begge sakte forsvinner inn i drømmeland.",  // romantisk
+  /*182 */ "Du er omtenksom på en måte de fleste ikke klarer, det setter jeg utrolig pris på.",  // bekreftelse
+  /*183 */ "Offisielt midten av året, og du er fortsatt høydepunktet.",  // lekent
   /*184 */ "Noen dager vil jeg bare sitte med pannen mot din og la verden fortsette uten oss.",  // romantisk
   /*185 */ "Du takler tunge ting godt. Ikke ved å overse dem, ved å gå rett inn i dem, det er veldig sterkt.",  // bekreftelse
   /*186 */ "Status: du har igjen ødelagt vanlige dager for meg. Nekter å sende klage.",  // lekent
