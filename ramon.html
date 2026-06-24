@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAMÓN — Ramuelo-Turnéen 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ════════════════════════════════════════════════════════
+       DESIGN TOKENS — edit these to change the whole look
+    ════════════════════════════════════════════════════════ */
+    :root {
+      /* Palette */
+      --ink:         #1A3328;   /* deep forest green — page bg + all ticket ink */
+      --ink-mid:     #2C4A3E;   /* mid green for shadows / depth */
+      --paper:       #e9e5d9;   /* warm cream — ticket surface */
+      --paper-dark:  #d6d1c4;   /* slightly deeper cream for stub background */
+      --accent:      #8B6914;   /* warm gold, used sparingly */
+
+      /* Type scale */
+      --eyebrow-size: 0.62rem;
+      --body-size:    0.92rem;
+      --date-size:    clamp(2rem, 5.5vw, 3.6rem);
+      --mono-big:     clamp(2.8rem, 8vw, 6rem);
+      --stub-large:   clamp(1.3rem, 3vw, 2rem);
+      --stub-sm:      0.58rem;
+
+      /* Ticket geometry */
+      --ticket-radius: 10px;
+      --notch-r:       18px;    /* radius of semicircular edge notches */
+      --perf-x:        75%;     /* perforation position from ticket's left edge */
+      --stub-w:        25%;     /* stub column width */
+      --ticket-pad:    clamp(18px, 4vw, 36px);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'EB Garamond', Georgia, serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Faint field-speck overlay on the deep green background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      animation: specksIn 900ms 500ms ease-out both;
+    }
+
+    @keyframes specksIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       STAGE — centres the ticket, holds perspective
+    ════════════════════════════════════════════════════════ */
+    .stage {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding: clamp(24px, 6vw, 60px) clamp(16px, 5vw, 48px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       TICKET WRAPPER
+    ════════════════════════════════════════════════════════ */
+    /* Stack wrapper — holds both tickets, receives the parallax tilt */
+    .ticket-stack {
+      position: relative;
+      width: 100%;
+      max-width: 760px;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .ticket {
+      position: relative;
+      width: 100%;
+      background: var(--paper);
+      border-radius: var(--ticket-radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: row;
+      overflow: visible; /* notches extend outside the border-radius */
+      animation: ticketIn 600ms ease-out both;
+      z-index: 1;
+    }
+
+    /* Second ticket — decorative, peeking behind the first */
+    .ticket-ghost {
+      position: absolute;
+      inset: 0;
+      background: var(--paper);
+      border-radius: var(--ticket-radius);
+      z-index: 0;
+      pointer-events: none;
+      transform: rotate(2.5deg) translate(6px, 10px);
+      opacity: 0.8;
+      animation: ghostIn 800ms 150ms ease-out both;
+    }
+
+    @keyframes ghostIn {
+      from { opacity: 0; transform: rotate(2.5deg) translate(6px, 10px) scale(0.96); }
+      to   { opacity: 0.8; transform: rotate(2.5deg) translate(6px, 10px); }
+    }
+
+    @keyframes ticketIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0);   }
+    }
+
+    /* Paper grain texture overlay on the ticket surface */
+    .ticket::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--ticket-radius);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='200' filter='url(%23g)' opacity='0.09'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Left & right semicircular notch cut-outs */
+    .notch {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width:  calc(var(--notch-r) * 2);
+      height: calc(var(--notch-r) * 2);
+      background: var(--ink);   /* matches page bg — creates "punch-through" illusion */
+      border-radius: 50%;
+      z-index: 11;
+    }
+    .notch-left  { left:  calc(var(--notch-r) * -1); }
+    .notch-right { right: calc(var(--notch-r) * -1); }
+
+    /* ════════════════════════════════════════════════════════
+       TICKET BODY (left 75%)
+    ════════════════════════════════════════════════════════ */
+    .ticket__body {
+      flex: 1 1 0;
+      padding: var(--ticket-pad);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: clamp(180px, 30vw, 290px);
+      overflow: hidden;
+    }
+
+    /* Top: eyebrow + blurb */
+    .body-top {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .eyebrow {
+      font-family: 'EB Garamond', serif;
+      font-size: var(--eyebrow-size);
+      font-variant: small-caps;
+      letter-spacing: 0.2em;
+      color: var(--ink);
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    .blurb {
+      font-family: 'EB Garamond', serif;
+      font-size: var(--body-size);
+      color: var(--ink);
+      line-height: 1.55;
+      max-width: 26ch;
+    }
+    .blurb em { font-style: italic; }
+
+    /* Bottom: monogram + date block */
+    .body-bottom {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* R / RAMÓN stacked monogram (mirrors FF / FEST from the reference) */
+    .monogram {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 0.85;
+      color: var(--ink);
+    }
+    .mono-big {
+      font-family: 'Playfair Display', serif;
+      font-size: var(--mono-big);
+      font-weight: 900;
+      display: block;
+      letter-spacing: -0.02em;
+    }
+    .mono-label {
+      font-family: 'EB Garamond', serif;
+      font-size: calc(var(--eyebrow-size) * 1.15);
+      font-variant: small-caps;
+      letter-spacing: 0.28em;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* Date + city */
+    .date-block {
+      text-align: right;
+      color: var(--ink);
+    }
+    .date-big {
+      font-family: 'Playfair Display', serif;
+      font-size: var(--date-size);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+    .city {
+      font-family: 'EB Garamond', serif;
+      font-size: calc(var(--body-size) * 1.05);
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       PERFORATION LINE
+    ════════════════════════════════════════════════════════ */
+    .perf-line {
+      position: absolute;
+      left: var(--perf-x);
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--ink) 0,
+        var(--ink) 5px,
+        transparent 5px,
+        transparent 10px
+      );
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Small circular tear-notches where the perforation meets the ticket edges */
+    .tear-top,
+    .tear-bottom {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      background: var(--ink);
+      border-radius: 50%;
+      z-index: 12;
+    }
+    .tear-top    { top:    -5px; }
+    .tear-bottom { bottom: -5px; }
+
+    /* ════════════════════════════════════════════════════════
+       STUB — right 25%, clickable link to Ticketmaster
+    ════════════════════════════════════════════════════════ */
+    .ticket__stub {
+      width: var(--stub-w);
+      flex-shrink: 0;
+      background: var(--paper-dark);
+      border-radius: 0 var(--ticket-radius) var(--ticket-radius) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: var(--ink);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: background 0.2s ease, filter 0.2s ease;
+    }
+    .ticket__stub:hover        { background: #ccc8ba; filter: brightness(0.97); }
+    .ticket__stub:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: -3px;
+    }
+
+    /* Rotated stub content — reads bottom-to-top */
+    .stub-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      transform: rotate(-90deg);
+      white-space: nowrap;
+      padding: 8px 0;
+    }
+
+    .stub-sm-text {
+      font-family: 'EB Garamond', serif;
+      font-size: var(--stub-sm);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    .stub-admit {
+      font-family: 'Playfair Display', serif;
+      font-size: var(--stub-large);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+
+    /* Subtle "Kjøp billett" label that appears on hover */
+    .stub-cta {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'EB Garamond', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .ticket__stub:hover .stub-cta,
+    .ticket__stub:focus-visible .stub-cta { opacity: 0.55; }
+
+
+    /* ════════════════════════════════════════════════════════
+       MOBILE — stack vertically below 560px
+    ════════════════════════════════════════════════════════ */
+    @media (max-width: 560px) {
+      body { overflow: auto; align-items: flex-start; padding: 32px 0 48px; }
+
+      .ticket-ghost { display: none; }
+
+      .ticket {
+        flex-direction: column;
+        max-width: 340px;
+        overflow: visible;
+      }
+
+      .ticket__body {
+        min-height: 0;
+        padding: 20px 20px 16px;
+      }
+
+      .body-bottom { margin-top: 16px; }
+
+      /* Horizontal perforation line between body and stub on mobile */
+      .perf-line {
+        position: relative;
+        left: auto; top: auto; bottom: auto;
+        width: 100%;
+        height: 1px;
+        background: repeating-linear-gradient(
+          to right,
+          var(--ink) 0, var(--ink) 5px,
+          transparent 5px, transparent 10px
+        );
+        opacity: 0.35;
+      }
+      .tear-top, .tear-bottom { display: none; }
+
+      /* Side notches become top/bottom notches on mobile */
+      .notch-left  { left: 50%; top: auto; transform: translate(-50%, calc(var(--notch-r) * -1)); bottom: 0; }
+      .notch-right { right: auto; left: 50%; top: 0; transform: translate(-50%, calc(var(--notch-r) * -1)); }
+
+      .ticket__stub {
+        width: 100%;
+        border-radius: 0 0 var(--ticket-radius) var(--ticket-radius);
+        padding: 14px 20px 18px;
+        min-height: 72px;
+      }
+
+      /* Unrotate text in mobile stub */
+      .stub-inner {
+        transform: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 6px 12px;
+        white-space: normal;
+      }
+
+      .stub-cta {
+        position: static;
+        transform: none;
+        display: block;
+        margin-top: 8px;
+        opacity: 0.5;
+        width: 100%;
+        text-align: center;
+      }
+      .ticket__stub:hover .stub-cta,
+      .ticket__stub:focus-visible .stub-cta { opacity: 0.75; }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       REDUCED MOTION — disable all animation / tilt
+    ════════════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      .ticket, .ticket-ghost, body::before { animation: none; opacity: 1; }
+      .ticket-ghost { transform: rotate(2.5deg) translate(6px, 10px); }
+      .ticket-stack { transform: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage">
+    <div class="ticket-stack" id="ticket-stack">
+
+      <!-- Second ticket peeking behind — two tickets for the two of us -->
+      <div class="ticket ticket-ghost" aria-hidden="true"></div>
+
+      <div class="ticket" id="ticket" role="main">
+
+      <!-- Semicircular edge notch cut-outs (same colour as page bg) -->
+      <span class="notch notch-left"  aria-hidden="true"></span>
+      <span class="notch notch-right" aria-hidden="true"></span>
+
+      <!-- ── MAIN BODY ──────────────────────────────── -->
+      <div class="ticket__body">
+
+        <div class="body-top">
+          <!-- Eyebrow: small caps with generous letter-spacing -->
+          <div class="eyebrow">RAMÓN &mdash; Ramuelo-Turnéen 2026</div>
+
+          <!--
+            BLURB — replace [VENUE] with the real venue name.
+            One italic word ("opnar") for character, per spec.
+          -->
+          <p class="blurb">
+            Ein kveld med Ramón på [Tapperiet paa Dahls].<br>
+            Dørene <em>åpnar</em> 19.00.
+          </p>
+        </div>
+
+        <div class="body-bottom">
+          <!-- Stacked monogram: big R, then RAMÓN beneath — mirrors FF/FEST reference -->
+          <div class="monogram" aria-label="R — Ramón">
+            <span class="mono-big">R</span>
+            <span class="mono-label">RAMÓN</span>
+          </div>
+
+          <!--
+            DATE BLOCK
+            TODO: set --date-content to the real date, e.g. "18. SEPT"
+            TODO: change [CITY] to the real city, e.g. "Oslo"
+          -->
+          <div class="date-block">
+            <div class="date-big">[18.09]</div>
+            <div class="city">[TRONDHEIM], 2026</div>
+          </div>
+        </div>
+
+      </div><!-- /.ticket__body -->
+
+      <!-- ── PERFORATION + TEAR NOTCHES ────────────── -->
+      <div class="perf-line" aria-hidden="true">
+        <span class="tear-top"></span>
+        <span class="tear-bottom"></span>
+      </div>
+
+      <!-- ── STUB — clickable link to Ticketmaster ─── -->
+      <!--
+        Stub text rotated 90° reads bottom-to-top on desktop.
+        Norwegian alt for "ADMIT ONE": ÉN BILLETT (see comment in HTML).
+        On click: quick "tear" detach animation, then navigates.
+      -->
+      <a
+        class="ticket__stub"
+        id="stub"
+        href="https://www.ticketmaster.no/event/ramon-billetter/918844557"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Kjøp billett til RAMÓN — Ramuelo-Turnéen 2026 på Ticketmaster"
+      >
+        <div class="stub-inner" aria-hidden="true">
+          <span class="stub-sm-text">RAMÓN &mdash; RAMUELO 2026</span>
+          <!-- TODO: replace with real ticket type, e.g. "All-Access Pass" or "Stående" -->
+          <span class="stub-sm-text">[Stående]</span>
+          <!-- TODO: replace with real date, same as .date-big above -->
+          <span class="stub-sm-text">[18.09]</span>
+          <!-- ADMIT ONE / Norwegian: ÉN BILLETT -->
+          <span class="stub-admit">ADMIT ONE</span>
+        </div>
+        <div class="stub-cta">Kjøp billett &rarr;</div>
+      </a>
+
+    </div><!-- /.ticket -->
+    </div><!-- /.ticket-stack -->
+  </div><!-- /.stage -->
+
+  <script>
+    (function () {
+      'use strict';
+      var stack = document.getElementById('ticket-stack');
+      var ticket = document.getElementById('ticket');
+
+      /* Detect reduced-motion preference and touch */
+      var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var isTouch = false;
+      window.addEventListener('touchstart', function () { isTouch = true; }, { once: true, passive: true });
+
+      /* ── Smooth parallax tilt following the cursor ──
+         The whole stack tilts so both tickets move as one unit.
+         rotateX: ±3 deg,  rotateY: ±4 deg — lerp + rAF for a buttery settle.
+      ─────────────────────────────────────────────── */
+      var tRx = 0, tRy = 0;
+      var cRx = 0, cRy = 0;
+
+      function lerp(a, b, t) { return a + (b - a) * t; }
+
+      function tick() {
+        cRx = lerp(cRx, tRx, 0.1);
+        cRy = lerp(cRy, tRy, 0.1);
+        var dx = cRy * 1.5;
+        var dy = -cRx * 1.5 + 24;
+        stack.style.transform =
+          'rotateX(' + cRx.toFixed(2) + 'deg) rotateY(' + cRy.toFixed(2) + 'deg)';
+        ticket.style.boxShadow =
+          dx + 'px ' + dy + 'px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.3)';
+        requestAnimationFrame(tick);
+      }
+
+      if (!prefersReduced) {
+        document.addEventListener('mousemove', function (e) {
+          if (isTouch) return;
+          tRx = ((e.clientY / window.innerHeight) - 0.5) * -6;
+          tRy = ((e.clientX / window.innerWidth)  - 0.5) *  8;
+        });
+        document.addEventListener('mouseleave', function () { tRx = 0; tRy = 0; });
+        requestAnimationFrame(tick);
+      }
+
+    }());
+  </script>
+
+</body>
+</html>
