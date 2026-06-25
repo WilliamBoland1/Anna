@@ -353,32 +353,34 @@
 
 
     /* ════════════════════════════════════════════════════════
-       MOBILE — stack vertically below 560px
+       PORTRETT / MOBIL — stables vertikalt under 560px
     ════════════════════════════════════════════════════════ */
     @media (max-width: 560px) {
-      body { overflow: auto; align-items: flex-start; padding: 32px 0 48px; }
+      /* Billetten er kort nok til å passe på én skjerm — ingen scrolling */
+      body { overflow: hidden; align-items: center; padding: 0; }
 
       .ticket-ghost { display: none; }
 
       .ticket {
         flex-direction: column;
-        max-width: 340px;
+        max-width: min(370px, 92vw);
         overflow: visible;
       }
 
       .ticket__body {
         min-height: 0;
-        padding: 20px 20px 16px;
+        padding: 24px 24px 20px;
       }
 
-      .body-bottom { margin-top: 16px; }
+      .body-bottom { margin-top: 20px; }
 
-      /* Horizontal perforation line between body and stub on mobile */
+      /* Horisontal perforeringslinje mellom body og stubbe */
       .perf-line {
         position: relative;
         left: auto; top: auto; bottom: auto;
         width: 100%;
         height: 1px;
+        overflow: visible;
         background: repeating-linear-gradient(
           to right,
           var(--ink) 0, var(--ink) 5px,
@@ -388,33 +390,46 @@
       }
       .tear-top, .tear-bottom { display: none; }
 
-      /* Side notches become top/bottom notches on mobile */
-      .notch-left  { left: 50%; top: auto; transform: translate(-50%, calc(var(--notch-r) * -1)); bottom: 0; }
-      .notch-right { right: auto; left: 50%; top: 0; transform: translate(-50%, calc(var(--notch-r) * -1)); }
+      /* Halvmåne-notcher på venstre/høyre kant av perforeringslinjen */
+      .notch { display: none; }
+      .perf-line::before,
+      .perf-line::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width:  calc(var(--notch-r) * 2);
+        height: calc(var(--notch-r) * 2);
+        background: var(--ink);
+        border-radius: 50%;
+        z-index: 11;
+      }
+      .perf-line::before { left:  calc(var(--notch-r) * -1); }
+      .perf-line::after  { right: calc(var(--notch-r) * -1); }
 
       .ticket__stub {
         width: 100%;
         border-radius: 0 0 var(--ticket-radius) var(--ticket-radius);
-        padding: 14px 20px 18px;
-        min-height: 72px;
+        padding: 16px 24px 20px;
+        min-height: 88px;
       }
 
-      /* Unrotate text in mobile stub */
+      /* Strekk stub-teksten vertikalt — ryddigere enn flex-wrap */
       .stub-inner {
         transform: none;
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 6px 12px;
+        gap: 3px;
         white-space: normal;
       }
 
+      /* CTA alltid synlig på touch (ingen hover) */
       .stub-cta {
         position: static;
         transform: none;
         display: block;
-        margin-top: 8px;
+        margin-top: 10px;
         opacity: 0.5;
         width: 100%;
         text-align: center;
