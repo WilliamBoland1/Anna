@@ -390,22 +390,7 @@
       }
       .tear-top, .tear-bottom { display: none; }
 
-      /* Halvmåne-notcher på venstre/høyre kant av perforeringslinjen */
       .notch { display: none; }
-      .perf-line::before,
-      .perf-line::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width:  calc(var(--notch-r) * 2);
-        height: calc(var(--notch-r) * 2);
-        background: var(--ink);
-        border-radius: 50%;
-        z-index: 11;
-      }
-      .perf-line::before { left:  calc(var(--notch-r) * -1); }
-      .perf-line::after  { right: calc(var(--notch-r) * -1); }
 
       .ticket__stub {
         width: 100%;
